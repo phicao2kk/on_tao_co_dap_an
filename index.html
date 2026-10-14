@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ôn tập Kinh tế Chính trị</title>
+<style>
+    * { box-sizing: border-box; }
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        max-width: 1200px; margin: 0 auto; padding: 20px;
+        background-color: #eef2f5;
+    }
+    h1 { text-align: center; color: #1a3a5c; margin-bottom: 5px; font-size: 1.8rem; }
+    .sub { text-align: center; color: #5a6e7a; margin-bottom: 20px; font-size: 0.9rem; }
+    .stats-bar {
+        background: white; padding: 15px 20px; border-radius: 12px;
+        margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        display: flex; flex-wrap: wrap; justify-content: space-between;
+        align-items: center; gap: 15px;
+    }
+    .progress { flex: 2; min-width: 180px; }
+    .progress-text { font-weight: bold; color: #1a3a5c; margin-bottom: 5px; }
+    .progress-bar { background: #e0e8f0; border-radius: 20px; height: 28px; overflow: hidden; }
+    .progress-fill {
+        background: #27ae60; height: 100%; width: 0%; border-radius: 20px;
+        transition: width 0.3s; display: flex; align-items: center;
+        justify-content: center; color: white; font-size: 13px; font-weight: bold;
+    }
+    .filters { display: flex; gap: 8px; flex-wrap: wrap; }
+    .filter-btn, .action-btn {
+        padding: 7px 14px; border: none; border-radius: 25px;
+        cursor: pointer; font-weight: 600; transition: all 0.2s; font-size: 13px;
+    }
+    .filter-btn.active { background: #2c5f8a; color: white; }
+    .filter-btn:not(.active) { background: #e9ecef; color: #2c5f8a; }
+    .filter-btn:hover, .action-btn:hover { opacity: 0.85; transform: scale(1.02); }
+    .action-btn { background: #7f8c8d; color: white; }
+    .search-wrapper { flex: 1; min-width: 220px; position: relative; }
+    .search-wrapper input {
+        width: 100%; padding: 9px 40px 9px 15px;
+        border: 1px solid #cbd5e0; border-radius: 30px;
+        font-size: 14px; background: white;
+    }
+    .search-wrapper input:focus {
+        outline: none; border-color: #2c5f8a;
+        box-shadow: 0 0 0 2px rgba(44,95,138,0.2);
+    }
+    .clear-search {
+        position: absolute; right: 12px; top: 50%;
+        transform: translateY(-50%); cursor: pointer; font-size: 18px;
+        color: #94a3b8; background: none; border: none; border-radius: 50%;
+        width: 24px; height: 24px; display: flex;
+        align-items: center; justify-content: center;
+    }
+    .clear-search:hover { color: #e74c3c; background: #f1f5f9; }
+    .result-info {
+        text-align: center; color: #5a6e7a; font-size: 13px;
+        margin-bottom: 10px; font-style: italic;
+    }
+    .qa-item {
+        background: white; margin: 12px 0; padding: 16px 20px;
+        border-radius: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        border-left: 6px solid #3498db; display: flex;
+        align-items: flex-start; gap: 15px; transition: 0.2s;
+    }
+    .qa-item.completed {
+        border-left-color: #27ae60; background: #f9fff9; opacity: 0.92;
+    }
+    .checkbox { margin-top: 3px; flex-shrink: 0; }
+    .checkbox input {
+        width: 22px; height: 22px; cursor: pointer; accent-color: #27ae60;
+    }
+    .content { flex: 1; min-width: 0; }
+    .question {
+        font-weight: 800; color: #1e293b; font-size: 1rem;
+        margin-bottom: 8px; line-height: 1.4;
+        background: #f8fafc; padding: 6px 12px; border-radius: 10px;
+        word-wrap: break-word;
+    }
+    .question .q-num { color: #2c5f8a; margin-right: 6px; font-weight: 900; }
+    .answer {
+        background: #e8f5e9; padding: 8px 14px; border-radius: 10px;
+        color: #1e5a2e; font-weight: 600; font-size: 0.95rem;
+        border-left: 4px solid #2ecc71; word-wrap: break-word;
+    }
+    .answer .label { color: #27ae60; font-weight: 800; }
+    /* Highlight từ khóa tìm kiếm - CHỈ trong câu hỏi */
+    mark.hl {
+        background: #ffe066;
+        color: #1a3a5c;
+        padding: 0 2px;
+        border-radius: 3px;
+        font-weight: 900;
+        box-shadow: 0 0 0 1px #f1c40f;
+    }
+    footer {
+        text-align: center; margin-top: 35px; padding: 15px;
+        color: #6c7a89; font-size: 13px; border-top: 1px solid #ddd;
+    }
+    @media (max-width: 650px) {
+        body { padding: 12px; }
+        .qa-item { flex-direction: column; padding: 14px; }
+    }
+</style>
+</head>
+<body>
+    <h1>📚 Ôn tập Kinh tế Chính trị</h1>
+    <div class="sub">✅ Tick vào ô vuông câu đã học | 🔍 Tìm trong câu hỏi (không dấu cũng được, từ khóa bôi vàng)</div>
+
+    <div class="stats-bar">
+        <div class="progress">
+            <div class="progress-text">📊 Tiến độ ôn tập</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill">0%</div>
+            </div>
+        </div>
+        <div class="filters">
+            <button class="filter-btn active" data-filter="all">📋 Tất cả</button>
+            <button class="filter-btn" data-filter="completed">✅ Đã học</button>
+            <button class="filter-btn" data-filter="pending">⏳ Chưa học</button>
+        </div>
+        <div class="filters">
+            <button class="action-btn" id="selectAllBtn">✅ Chọn tất cả</button>
+            <button class="action-btn" id="unselectAllBtn">⬜ Bỏ chọn</button>
+        </div>
+        <div class="search-wrapper">
+            <input type="text" id="searchInput" placeholder="🔍 Tìm trong câu hỏi (VD: cau 5, tiền tệ)..." autocomplete="off">
+            <button class="clear-search" id="clearSearchBtn" title="Xóa tìm kiếm">✖</button>
+        </div>
+    </div>
+
+    <div class="result-info" id="resultInfo"></div>
+    <div id="questions-container"></div>
+    <footer>💾 Tự động lưu tiến độ | 📖 Đáp án không bị ảnh hưởng bởi tìm kiếm | 🟡 Từ khóa bôi vàng trong câu hỏi</footer>
+
+<script>
+// ============ DỮ LIỆU ============
+const fullRawData = `Câu 1: Trong bối cảnh giá trị thặng dư là nguồn gốc của lợi nhuận, hãy lựa chọn một mô hình doanh nghiệp mà bạn cho rằng người lao động cũng được hưởng một phần giá trị thặng dư như chủ doanh nghiệp.
+-> Đáp án: C. Mô hình công ty cổ phần, trong đó người lao động sở hữu cổ phần và được chia cổ tức.
+Câu 2: Nền sản xuất hàng hóa xuất hiện lần đầu tiên trong chế độ xã hội nào sau đây?
+-> Đáp án: A. Xã hội chiếm hữu nô lệ.
+Câu 3: Anh B mua một chiếc điện thoại ở Thế giới di động với hình thức trả góp. Mỗi tháng anh B phải trả cho công ty tài chính một khoản tiền là 2,5 triệu đồng. Trong trường hợp trên, tiền tệ thực hiện chức năng nào sau đây?
+-> Đáp án: A. Phương tiện thanh toán.
+Câu 4: Nội dung nào sau đây phản ánh sự khác biệt căn bản trong quan niệm của chủ nghĩa trọng thương và kinh tế chính trị Mác - Lênin về thương nghiệp?
+-> Đáp án: B. Nguồn gốc của lợi nhuận thương nghiệp
+Câu 5: Nội dung nào dưới đây phản ánh đúng về địa tô chênh lệch?
+-> Đáp án: B. Phần lợi nhuận thu được nhờ đất có điều kiện thuận lợi.
+Câu 6: Khi một nhà đầu tư mua cổ phiếu trên sàn chứng khoán, họ có vai trò nào sau đây?
+-> Đáp án: D. Quyền sở hữu một phần của doanh nghiệp
+Câu 7: Dựa vào sự biến động của giá cả thị trường, doanh nghiệp chuyển hướng sang sản xuất mặt hàng mang lại lợi nhuận cao. Trường hợp trên phản ánh tác động nào sau đây của quy luật giá trị?
+-> Đáp án: D. Điều tiết sản xuất và lưu thông hàng hóa
+Câu 8: Cách hiểu nào sau đây là phù hợp với chức năng thước đo giá trị của tiền tệ?
+-> Đáp án: D. Tiền tệ dùng để biểu hiện giá trị hàng hóa
+Câu 9: Một nhà tư bản đầu tư vào ngành có lợi nhuận thấp hơn lợi nhuận bình quân. Nhà tư bản nên thực hiện phương án nào sau đây?
+-> Đáp án: B. Chuyển hướng đầu tư sang ngành có lợi nhuận bình quân cao hơn.
+Câu 10: Nhận định nào dưới đây giải thích đúng về nguyên nhân làm tăng giá ngô trong thông tin trên?
+-> Đáp án: B. Nhu cầu tăng cao làm cầu vượt cung, theo quy luật cung – cầu.
+Câu 11: Yếu tố nào sau đây không phải là hệ quả trực tiếp của sự phân công lao động xã hội đối với sự phát triển của nền sản xuất hàng hóa?
+-> Đáp án: B. Tập trung tư bản
+Câu 12: Chủ nghĩa trọng thương lý giải nguồn gốc lợi nhuận được sinh ra từ lĩnh vực nào sau đây?
+-> Đáp án: A. Lưu thông
+Câu 13: Định nghĩa nào dưới đây phản ánh chính xác nhất về phạm trù Tư bản?
+-> Đáp án: D. Tư bản là giá trị đem lại giá trị thặng dư bằng cách bóc lột sức lao động làm thuê
+Câu 14: Trường phái nào sau đây được ghi nhận là hệ thống lý luận kinh tế chính trị bước đầu nghiên cứu về nền sản xuất tư bản chủ nghĩa?
+-> Đáp án: A. Chủ nghĩa trọng thương
+Câu 15: Nhận định nào sau đây phản ánh đúng bản chất của khái niệm Tiền công?
+-> Đáp án: A. Tiền công là giá cả của hàng hóa sức lao động.
+Câu 16: Nếu một nhà tư bản đầu tư vào một ngành có tỷ suất lợi nhuận thấp hơn lợi nhuận bình quân, nhà tư bản có thể làm gì?
+-> Đáp án: A. Rút vốn khỏi ngành đó
+Câu 17: Một doanh nghiệp kinh doanh sản xuất rau hữu cơ với thông tin đầu tư như sau: 200 triệu đồng vào tư bản bất biến và 100 triệu đồng vào tư bản khả biến; 180 triệu đồng vào tư bản cố định và 120 triệu đồng vào tư bản lưu động. Tổng tư bản ứng trước là bao nhiêu?
+-> Đáp án: B. 300 triệu đồng
+Câu 18: Theo bạn, việc tăng hàm lượng công nghệ vào sản phẩm có làm giảm giá trị của hàng hóa theo Học thuyết giá trị của C. Mác hay không?
+-> Đáp án: D. Không, vì giá trị của hàng hóa được quyết định bởi lao động xã hội cần thiết, bao gồm cả lao động ẩn chứa trong công nghệ.
+Câu 19: Điểm khác biệt căn bản giữa sự chu chuyển giá trị giữa tư bản cố định và tư bản lưu động là
+-> Đáp án: A. tư bản cố định chuyển giá trị dần dần, tư bản lưu động chuyển một lần
+Câu 20: Để may một cái áo với chất lượng như nhau, chị H mất 4 giờ, anh K mất 5 giờ, chú T mất 7 giờ. Thời gian lao động xã hội cần thiết để may một cái áo là 5 giờ. Trong trường hợp trên, ai thực hiện đúng quy luật giá trị?
+-> Đáp án: B. Anh K và chị H.
+Câu 21: Samsung Galaxy Fold là chiếc điện thoại gập đầu tiên ra mắt trên thế giới vào năm 2019. Nó sở hữu một màn hình Infinity Flex Display 7,3 inch có thể gập lại thành một thiết bị nhỏ gọn với màn hình phụ mặt ngoài. Thông tin trên thể hiện nội dung nào sau đây?
+-> Đáp án: D. Giá trị sử dụng của Samsung Galaxy Fold
+Câu 22: Nội dung nào dưới đây là điều kiện cơ bản để hình thành địa tô tư bản chủ nghĩa?
+-> Đáp án: A. Độc quyền sở hữu ruộng đất và kinh doanh nông nghiệp TBCN.
+Câu 23: Nội dung nào sau đây là đối tượng nghiên cứu của Kinh tế chính trị Mác - Lênin?
+-> Đáp án: A. Quan hệ xã hội trong sản xuất và trao đổi.
+Câu 24: Adam Smith cho rằng kinh tế chính trị là một ngành khoa học gắn liền với chính khách hay nhà lập pháp vì lý do nào sau đây?
+-> Đáp án: B. Kinh tế chính trị có nhiệm vụ giúp nhà nước tạo ra nguồn thu nhập và quản lý nguồn ngân sách công.
+Câu 25: Để tăng số lượng hàng hóa, doanh nghiệp Y kéo dài ngày làm việc từ 8 giờ lên 10 giờ. Biết thời gian lao động tất yếu là không đổi. Trong trường hợp trên, doanh nghiệp Y sẽ nhận được loại giá trị thặng dư nào sau đây?
+-> Đáp án: B. Giá trị thặng dư tuyệt đối
+Câu 26: Lợi nhuận thương nghiệp là
+-> Đáp án: A. một phần giá trị thặng dư cho người lao động tạo ra.
+Câu 27: Lợi tức được xem là một phần của giá trị thặng dư vì
+-> Đáp án: C. đó là phần giá trị có được từ lao động không công của người công nhân.
+Câu 28: Việt Nam đang xây dựng mô hình kinh tế nào sau đây?
+-> Đáp án: B. Kinh tế thị trường định hướng xã hội chủ nghĩa
+Câu 29: Điều nào sau đây phản ánh đúng bản chất của phạm trù lợi nhuận?
+-> Đáp án: C. Hình thức biến tướng của giá trị thặng dư
+Câu 30: Muốn cho giá trị cá biệt của hàng hóa thấp hơn giá trị xã hội của hàng hóa, người sản xuất cần thực hiện biện pháp nào sau đây?
+-> Đáp án: B. Nâng cao năng suất lao động
+Câu 31: Nhà nước cần thay đổi chính sách kinh tế trong trường hợp nào sau đây?
+-> Đáp án: C. Khi chính sách không phù hợp với quy luật kinh tế khách quan.
+Câu 32: Trong sản xuất và lưu thông hàng hóa, lao động xã hội của người sản xuất hàng hoá kết tinh trong hàng hoá được gọi là
+-> Đáp án: B. giá trị của hàng hoá
+Câu 33: Phạm trù nào sau đây không bắt buộc phải gắn với nền sản xuất hàng hóa?
+-> Đáp án: A. Giá trị sử dụng
+Câu 34: "Chính trị kinh tế học tuyệt nhiên không nghiên cứu sự sản xuất, mà nghiên cứu những quan hệ xã hội giữa người với người trong sản xuất, nghiên cứu chế độ xã hội của sản xuất". Câu nói trên của V. I. Lênin nhấn mạnh đến nội dung nào sau đây?
+-> Đáp án: D. Đối tượng nghiên cứu của kinh tế chính trị Mác - Lênin
+Câu 35: Theo yêu cầu của quy luật giá trị, việc sản xuất và lưu thông hàng hóa phải dựa trên cơ sở nào dưới đây?
+-> Đáp án: A. Thời gian lao động xã hội cần thiết
+Câu 36: Từ sự khác biệt và mối quan hệ giữa quy luật kinh tế và chính sách kinh tế, bạn sẽ áp dụng nguyên tắc nào sau đây để xây dựng một chính sách kinh tế bền vững?
+-> Đáp án: B. Chính sách kinh tế phải dựa trên sự nhận thức đúng về quy luật kinh tế và điều chỉnh phù hợp.
+Câu 37: Lý luận kinh tế chính trị của Mác và Ăngghen được thể hiện tập trung và cô đọng nhất trong tác phẩm nào sau đây?
+-> Đáp án: D. Tư bản
+Câu 38: Một nhà tư bản đầu tư trong lĩnh vực nông nghiệp trên mảnh đất xấu thu được tổng lợi nhuận là 1.000.000/năm. Biết trước nhà tư bản đầu tư trong lĩnh vực công nghiệp thu được lợi nhuận bình quân là 700.000/năm. Trong năm, nhà tư bản nông nghiệp phải trả địa tô tuyệt đối cho địa chủ là bao nhiêu?
+-> Đáp án: B. 300.000$
+Câu 39: Theo C.Mác, khối lượng tiền tệ cần thiết cho lưu thông trong nền kinh tế phụ thuộc chủ yếu vào các yếu tố nào sau đây?
+-> Đáp án: A. Tổng giá trị của hàng hóa và dịch vụ trao đổi trên thị trường
+Câu 40: Bộ phận tư bản nào sau đây có giá trị được chuyển dần dần vào sản phẩm mới?
+-> Đáp án: D. Tư bản cố định
+Câu 41: Dựa trên nội dung của quy luật giá trị, giải thích vì sao smartphone có giá cả đắt hơn điện thoại truyền thống?
+-> Đáp án: B. Vì để sản xuất ra smartphone, cần phải hao phí lao động xã hội nhiều hơn.
+Câu 42: Nhận định nào sau đây đánh giá đúng về ý nghĩa của Học thuyết giá trị trong bối cảnh toàn cầu hóa hiện nay?
+-> Đáp án: D. Vẫn còn giá trị vì nó phản ánh bản chất của sản xuất và trao đổi hàng hóa.
+Câu 43: Điểm khác biệt cơ bản giữa thị trường trong nền kinh tế thị trường tư bản chủ nghĩa và nền kinh tế xã hội chủ nghĩa là nội dung nào sau đây?
+-> Đáp án: C. Mục tiêu của thị trường.
+Câu 44: Địa tô chênh lệch và địa tô tuyệt đối giống nhau ở điểm nào sau đây?
+-> Đáp án: D. Đều có nguồn gốc là lợi nhuận siêu ngạch trong lĩnh vực nông nghiệp.
+Câu 45: Cho tư bản ứng trước 1000 tư bản; Cấu tạo hữu cơ là 3:2; m' = 200%. Quy mô sản xuất nào sau đây là phù hợp?
+-> Đáp án: A. 600c+400v+800m
+Câu 46: Để sản xuất thép, nhà tư bản thuê 40 công nhân. Tiền công của 1 người công nhân là 3$. Biết m' = 200%. Hãy xác định khối lượng giá trị thặng dư trong trường hợp trên.
+-> Đáp án: D. M = 240$
+Câu 47: Khi mức tiền công thực tế tăng lên, bạn sẽ đánh giá như thế nào về tác động của nó đối với sự tiêu dùng và sức mua tổng thể của người lao động trong nền kinh tế?
+-> Đáp án: D. Sức mua của người lao động sẽ tăng, giúp kích thích nền kinh tế.
+Câu 48: Tập trung tư bản chủ yếu xảy ra do quá trình nào sau đây?
+-> Đáp án: C. Sáp nhập doanh nghiệp.
+Câu 49: Giá trị của hàng hóa được quyết định bởi yếu tố nào sau đây?
+-> Đáp án: B. Lao động trừu tượng của người sản xuất hàng hóa.
+Câu 50: Đánh giá tính hiệu quả của phương pháp trừu tượng hóa trong việc phân tích mâu thuẫn cơ bản của chủ nghĩa tư bản, điều nào sau đây là đúng?
+-> Đáp án: B. Trừu tượng hóa giúp làm nổi bật mâu thuẫn cơ bản giữa tư bản và lao động làm thuê.`;
+
+// ============ PARSE ============
+function parseQuestions(fullText) {
+    const qList = [];
+    const regex = /Câu\s+(\d+)\s*:\s*([\s\S]*?)\s*->\s*Đáp\s*án\s*:\s*([\s\S]*?)(?=Câu\s+\d+\s*:|$)/gi;
+    let m;
+    while ((m = regex.exec(fullText)) !== null) {
+        const num = parseInt(m[1], 10);
+        const text = m[2].replace(/\s+/g, ' ').trim();
+        const answer = m[3].replace(/\s+/g, ' ').trim();
+        if (text) qList.push({ num, text, answer });
+    }
+    qList.sort((a, b) => a.num - b.num);
+    return qList;
+}
+
+// ============ CHUẨN HÓA TIẾNG VIỆT ============
+function normalizeVN(str) {
+    return String(str)
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/đ/g, 'd').replace(/Đ/g, 'D')
+        .toLowerCase();
+}
+
+function escapeHtml(s) {
+    return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
+const VN_MAP = {
+    'a': '[aàáảãạăằắẳẵặâầấẩẫậ]',
+    'ă': '[ăằắẳẵặ]',
+    'â': '[âầấẩẫậ]',
+    'e': '[eèéẻẽẹêềếểễệ]',
+    'ê': '[êềếểễệ]',
+    'i': '[iìíỉĩị]',
+    'o': '[oòóỏõọôồốổỗộơờớởỡợ]',
+    'ô': '[ôồốổỗộ]',
+    'ơ': '[ơờớởỡợ]',
+    'u': '[uùúủũụưừứửữự]',
+    'ư': '[ưừứửữự]',
+    'y': '[yỳýỷỹỵ]',
+    'd': '[dđ]'
+};
+
+function buildFlexRegex(keyword) {
+    const norm = normalizeVN(keyword);
+    let pattern = '';
+    for (const ch of norm) {
+        if (VN_MAP[ch]) pattern += VN_MAP[ch];
+        else if (/[.*+?^${}()|[\]\\]/.test(ch)) pattern += '\\' + ch;
+        else pattern += ch;
+    }
+    return new RegExp('(' + pattern + ')', 'gi');
+}
+
+function highlightKeyword(text, keyword) {
+    const safeText = escapeHtml(text);
+    if (!keyword || !keyword.trim()) return safeText;
+    try {
+        const regex = buildFlexRegex(keyword.trim());
+        let result = '';
+        let last = 0;
+        let m;
+        regex.lastIndex = 0;
+        while ((m = regex.exec(text)) !== null) {
+            if (m.index > last) {
+                result += escapeHtml(text.slice(last, m.index));
+            }
+            result += '<mark class="hl">' + escapeHtml(m[1]) + '</mark>';
+            last = m.index + m[1].length;
+            if (m.index === regex.lastIndex) regex.lastIndex++;
+        }
+        if (last < text.length) {
+            result += escapeHtml(text.slice(last));
+        }
+        return result;
+    } catch (e) {
+        return safeText;
+    }
+}
+
+// ============ STATE ============
+let questions = [];
+let completedStatus = {};
+let currentFilter = 'all';
+let searchKeyword = '';
+const STORAGE_KEY = 'qa_completed_v5';
+
+function saveProgress() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(completedStatus)); } catch (e) {}
+}
+function loadProgress() {
+    try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        completedStatus = saved ? JSON.parse(saved) : {};
+    } catch (e) { completedStatus = {}; }
+}
+
+function updateProgress() {
+    const total = questions.length;
+    const completedCount = questions.filter((_, i) => completedStatus[i] === true).length;
+    const percent = total === 0 ? 0 : Math.round((completedCount / total) * 100);
+    const fill = document.getElementById('progressFill');
+    fill.style.width = percent + '%';
+    fill.textContent = percent + '% (' + completedCount + '/' + total + ')';
+}
+
+// CHỈ TÌM TRONG CÂU HỎI (không tìm trong đáp án)
+function getVisibleIndexes() {
+    let idxs = questions.map((_, i) => i);
+    if (currentFilter === 'completed') {
+        idxs = idxs.filter(i => completedStatus[i] === true);
+    } else if (currentFilter === 'pending') {
+        idxs = idxs.filter(i => !completedStatus[i]);
+    }
+    const kw = searchKeyword.trim();
+    if (kw) {
+        const kwNorm = normalizeVN(kw);
+        const numMatch = kwNorm.match(/^(?:cau\s*)?(\d+)$/);
+        if (numMatch) {
+            const targetNum = parseInt(numMatch[1], 10);
+            idxs = idxs.filter(i => questions[i].num === targetNum);
+        } else {
+            // ⚠️ CHỈ kiểm tra q.text, KHÔNG kiểm tra q.answer
+            idxs = idxs.filter(i => {
+                return normalizeVN(questions[i].text).includes(kwNorm);
+            });
+        }
+    }
+    return idxs;
+}
+
+function renderQuestions() {
+    const container = document.getElementById('questions-container');
+    const info = document.getElementById('resultInfo');
+    container.innerHTML = '';
+
+    const visibleIdxs = getVisibleIndexes();
+
+    if (visibleIdxs.length === 0) {
+        container.innerHTML = '<div style="text-align:center;padding:40px;">📭 Không có câu hỏi nào phù hợp</div>';
+        info.textContent = `Tổng: ${questions.length} câu`;
+        return;
+    }
+    info.textContent = `Đang hiển thị ${visibleIdxs.length} / ${questions.length} câu`;
+
+    const frag = document.createDocumentFragment();
+    visibleIdxs.forEach((realIdx) => {
+        const q = questions[realIdx];
+        const isCompleted = completedStatus[realIdx] === true;
+
+        const div = document.createElement('div');
+        div.className = 'qa-item' + (isCompleted ? ' completed' : '');
+        div.dataset.idx = realIdx;
+
+        const cbWrap = document.createElement('div');
+        cbWrap.className = 'checkbox';
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.checked = isCompleted;
+        cb.dataset.idx = realIdx;
+        cb.addEventListener('change', function () {
+            const idx = parseInt(this.dataset.idx, 10);
+            completedStatus[idx] = this.checked;
+            saveProgress();
+            updateProgress();
+            renderQuestions();
+        });
+        cbWrap.appendChild(cb);
+
+        const content = document.createElement('div');
+        content.className = 'content';
+
+        // ✅ Câu hỏi: có highlight
+        const qDiv = document.createElement('div');
+        qDiv.className = 'question';
+        qDiv.innerHTML = `<span class="q-num">Câu ${q.num}:</span>` + highlightKeyword(q.text, searchKeyword);
+
+        // ✅ Đáp án: KHÔNG highlight, chỉ escape HTML
+        const aDiv = document.createElement('div');
+        aDiv.className = 'answer';
+        aDiv.innerHTML = `<span class="label">→ Đáp án:</span> ` + escapeHtml(q.answer || '(Chưa có đáp án)');
+
+        content.appendChild(qDiv);
+        content.appendChild(aDiv);
+        div.appendChild(cbWrap);
+        div.appendChild(content);
+        frag.appendChild(div);
+    });
+    container.appendChild(frag);
+}
+
+function setAllVisible(value) {
+    const visibleIdxs = getVisibleIndexes();
+    visibleIdxs.forEach(i => { completedStatus[i] = value; });
+    saveProgress();
+    updateProgress();
+    renderQuestions();
+}
+
+// ============ INIT ============
+function init() {
+    questions = parseQuestions(fullRawData);
+    console.log('Đã parse được', questions.length, 'câu hỏi');
+
+    loadProgress();
+    updateProgress();
+    renderQuestions();
+
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            currentFilter = this.dataset.filter;
+            renderQuestions();
+        });
+    });
+
+    document.getElementById('selectAllBtn').addEventListener('click', () => setAllVisible(true));
+    document.getElementById('unselectAllBtn').addEventListener('click', () => setAllVisible(false));
+
+    const searchInput = document.getElementById('searchInput');
+    const clearBtn = document.getElementById('clearSearchBtn');
+
+    searchInput.addEventListener('input', function (e) {
+        searchKeyword = e.target.value;
+        renderQuestions();
+    });
+    searchInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+            searchKeyword = e.target.value;
+            renderQuestions();
+        }
+    });
+    clearBtn.addEventListener('click', function () {
+        searchInput.value = '';
+        searchKeyword = '';
+        renderQuestions();
+        searchInput.focus();
+    });
+}
+
+init();
+</script>
+</body>
+</html>
